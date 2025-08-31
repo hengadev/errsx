@@ -13,12 +13,12 @@ func (m Map) Error() string {
 	if m.IsEmpty() {
 		return ""
 	}
-	var builder strings.Builder
+	var parts []string
 	for field, err := range m {
-		builder.WriteString(fmt.Sprintf("%s: %s; ", field, err.Error()))
+		parts = append(parts, fmt.Sprintf("%s: %s", field, err))
 	}
 
-	return builder.String()
+	return strings.Join(parts, "; ")
 }
 
 func (m Map) IsEmpty() bool {
