@@ -29,7 +29,7 @@ func (m *Map) Set(field string, msg any) error {
 		}
 		err = errors.New(msg)
 	default:
-		return fmt.Errorf("unsupported message type: %T, want error or string", msg)
+		panic(fmt.Sprintf("unsupported message type: %T, want error or string", msg))
 	}
 	(*m)[field] = err
 	return nil

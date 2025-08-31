@@ -26,6 +26,17 @@ func TestMap_Set(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var m Map
+			
+			if tt.name == "invalid type" {
+				defer func() {
+					if r := recover(); r == nil {
+						t.Error("Set() should panic on invalid type but didn't")
+					}
+				}()
+				m.Set("field", tt.msg)
+				return
+			}
+			
 			err := m.Set("field", tt.msg)
 
 			if tt.wantErr && err == nil {
