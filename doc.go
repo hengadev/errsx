@@ -33,4 +33,3 @@
 // This package is not thread-safe. If you need to use errsx.Map concurrently
 // from multiple goroutines, you must provide your own synchronization.
 package errsx
-

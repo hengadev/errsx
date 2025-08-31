@@ -9,7 +9,7 @@ import (
 
 func TestMap_Set(t *testing.T) {
 	var nilErr error = nil
-	
+
 	tests := []struct {
 		name    string
 		msg     any
@@ -27,7 +27,7 @@ func TestMap_Set(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var m Map
 			err := m.Set("field", tt.msg)
-			
+
 			if tt.wantErr && err == nil {
 				t.Error("Set() expected error but got none")
 				return
@@ -84,13 +84,13 @@ func TestMap_Has(t *testing.T) {
 func TestMap_Delete(t *testing.T) {
 	var m Map
 	m.Set("test", "error message")
-	
+
 	if !m.Has("test") {
 		t.Error("Setup failed: field should exist")
 	}
 
 	m.Delete("test")
-	
+
 	if m.Has("test") {
 		t.Error("Delete() failed: field still exists")
 	}
@@ -100,13 +100,13 @@ func TestMap_Clear(t *testing.T) {
 	var m Map
 	m.Set("test1", "error1")
 	m.Set("test2", "error2")
-	
+
 	if m.Len() != 2 {
 		t.Error("Setup failed: should have 2 errors")
 	}
 
 	m.Clear()
-	
+
 	if m.Len() != 0 {
 		t.Error("Clear() failed: map should be empty")
 	}
@@ -114,20 +114,20 @@ func TestMap_Clear(t *testing.T) {
 
 func TestMap_Fields(t *testing.T) {
 	var m Map
-	
+
 	// Test empty map
 	if fields := m.Fields(); fields != nil {
 		t.Errorf("Fields() = %v, want nil for empty map", fields)
 	}
-	
+
 	// Test with fields
 	m.Set("zebra", "error1")
 	m.Set("alpha", "error2")
 	m.Set("beta", "error3")
-	
+
 	want := []string{"alpha", "beta", "zebra"}
 	got := m.Fields()
-	
+
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("Fields() = %v, want %v", got, want)
 	}
@@ -135,16 +135,16 @@ func TestMap_Fields(t *testing.T) {
 
 func TestMap_Len(t *testing.T) {
 	var m Map
-	
+
 	if m.Len() != 0 {
 		t.Errorf("Len() = %v, want 0 for empty map", m.Len())
 	}
-	
+
 	m.Set("test1", "error1")
 	if m.Len() != 1 {
 		t.Errorf("Len() = %v, want 1", m.Len())
 	}
-	
+
 	m.Set("test2", "error2")
 	if m.Len() != 2 {
 		t.Errorf("Len() = %v, want 2", m.Len())
@@ -153,11 +153,11 @@ func TestMap_Len(t *testing.T) {
 
 func TestMap_IsEmpty(t *testing.T) {
 	var m Map
-	
+
 	if !m.IsEmpty() {
 		t.Error("IsEmpty() = false, want true for empty map")
 	}
-	
+
 	m.Set("test", "error")
 	if m.IsEmpty() {
 		t.Error("IsEmpty() = true, want false for non-empty map")
@@ -166,11 +166,11 @@ func TestMap_IsEmpty(t *testing.T) {
 
 func TestMap_AsError(t *testing.T) {
 	var m Map
-	
+
 	if err := m.AsError(); err != nil {
 		t.Errorf("AsError() = %v, want nil for empty map", err)
 	}
-	
+
 	m.Set("test", "error")
 	if err := m.AsError(); err == nil {
 		t.Error("AsError() = nil, want non-nil for non-empty map")
@@ -277,3 +277,4 @@ func TestRoundTrip(t *testing.T) {
 		t.Errorf("Round trip failed: got %v, want %v", parsed, expected)
 	}
 }
+

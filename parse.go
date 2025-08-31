@@ -9,7 +9,7 @@ func ParseErrors(s string) map[string]string {
 	if s == "" {
 		return result
 	}
-	
+
 	parts := strings.Split(s, "; ")
 	for _, part := range parts {
 		if part == "" {
@@ -25,3 +25,4 @@ func ParseErrors(s string) map[string]string {
 	}
 	return result
 }
+
