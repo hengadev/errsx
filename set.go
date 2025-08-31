@@ -10,6 +10,12 @@ func (m *Map) Set(field string, msg any) error {
 	if *m == nil {
 		*m = make(Map)
 	}
+	
+	// Handle nil case
+	if msg == nil {
+		return nil
+	}
+	
 	var err error
 	switch msg := msg.(type) {
 	case error:
