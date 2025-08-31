@@ -278,3 +278,97 @@ func TestRoundTrip(t *testing.T) {
 	}
 }
 
+func TestAs(t *testing.T) {
+	t.Run("direct errsx.Map", func(t *testing.T) {
+		var m Map
+		m.Set("field", "error message")
+		err := m.AsError()
+
+		var target Map
+		if !As(err, &target) {
+			t.Error("As() = false, want true for direct errsx.Map")
+		}
+
+		if !reflect.DeepEqual(target, m) {
+			t.Errorf("As() target = %v, want %v", target, m)
+		}
+	})
+
+	t.Run("wrapped errsx.Map", func(t *testing.T) {
+		var m Map
+		m.Set("field", "error message")
+		wrappedErr := &wrappedError{msg: "wrapped", err: m}
+
+		var target Map
+		if !As(wrappedErr, &target) {
+			t.Error("As() = false, want true for wrapped errsx.Map")
+		}
+
+		if !reflect.DeepEqual(target, m) {
+			t.Errorf("As() target = %v, want %v", target, m)
+		}
+	})
+
+	t.Run("non-errsx.Map error", func(t *testing.T) {
+		err := errors.New("regular error")
+
+		var target Map
+		if As(err, &target) {
+			t.Error("As() = true, want false for non-errsx.Map")
+		}
+
+		if len(target) != 0 {
+			t.Errorf("As() target = %v, want empty map", target)
+		}
+	})
+
+	t.Run("nil error", func(t *testing.T) {
+		var target Map
+		if As(nil, &target) {
+			t.Error("As() = true, want false for nil error")
+		}
+
+		if len(target) != 0 {
+			t.Errorf("As() target = %v, want empty map", target)
+		}
+	})
+
+	t.Run("empty errsx.Map", func(t *testing.T) {
+		var m Map
+		err := m.AsError() // Returns nil for empty map
+
+		var target Map
+		if As(err, &target) {
+			t.Error("As() = true, want false for nil error from empty map")
+		}
+	})
+
+	t.Run("panic on nil target", func(t *testing.T) {
+		var m Map
+		m.Set("field", "error")
+		err := m.AsError()
+
+		defer func() {
+			if r := recover(); r == nil {
+				t.Error("As() should panic when target is nil")
+			}
+		}()
+
+		As(err, nil)
+	})
+}
+
+// wrappedError is a test helper that wraps an error and implements Unwrap
+type wrappedError struct {
+	msg string
+	err error
+}
+
+func (w *wrappedError) Error() string {
+	return w.msg + ": " + w.err.Error()
+}
+
+func (w *wrappedError) Unwrap() error {
+	return w.err
+}
+

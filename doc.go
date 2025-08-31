@@ -11,6 +11,7 @@
 //   - Implements the error, Stringer and MarshalJSON interfaces
 //   - Utility methods for common operations (Delete, Clear, Fields, Len)
 //   - ParseErrors function to parse error strings back to maps
+//   - As function to extract errsx.Map from error interfaces (similar to errors.As)
 //   - Uses only the Go standard library, with no external dependencies
 //
 // Basic usage:
@@ -26,6 +27,12 @@
 //	// Use as error interface
 //	if err := errs.AsError(); err != nil {
 //		fmt.Println("Validation errors:", err)
+//	}
+//
+//	// Extract errsx.Map from error interface (useful in tests)
+//	var errMap errsx.Map
+//	if errsx.As(err, &errMap) {
+//		fmt.Println("Password error:", errMap["password"].Error())
 //	}
 //
 // Thread Safety:
