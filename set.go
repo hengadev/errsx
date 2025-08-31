@@ -2,10 +2,11 @@ package errsx
 
 import (
 	"errors"
+	"fmt"
 )
 
 // Set associates the given error with the given key. The map is lazily instanciated if it is nil
-func (m *Map) Set(field string, msg any) {
+func (m *Map) Set(field string, msg any) error {
 	if *m == nil {
 		*m = make(Map)
 	}
@@ -13,16 +14,17 @@ func (m *Map) Set(field string, msg any) {
 	switch msg := msg.(type) {
 	case error:
 		if msg == nil {
-			return
+			return nil
 		}
 		err = msg
 	case string:
 		if msg == "" {
-			return
+			return nil
 		}
 		err = errors.New(msg)
 	default:
-		panic("want error or string message")
+		return fmt.Errorf("unsupported message type: %T, want error or string", msg)
 	}
 	(*m)[field] = err
+	return nil
 }
