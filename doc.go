@@ -35,6 +35,68 @@
 //		fmt.Println("Password error:", errMap["password"].Error())
 //	}
 //
+// Advanced Examples:
+//
+// Error Wrapping and Extraction:
+//
+//	func validateUser(user User) error {
+//		var errs errsx.Map
+//		if user.Email == "" {
+//			errs.Set("email", "email is required")
+//		}
+//		if len(user.Password) < 8 {
+//			errs.Set("password", "must be at least 8 characters")
+//		}
+//		return errs.AsError()
+//	}
+//
+//	// Later, extract the map from the error
+//	if err := validateUser(user); err != nil {
+//		var errs errsx.Map
+//		if errsx.As(err, &errs) {
+//			for _, field := range errs.Fields() {
+//				fmt.Printf("%s: %s\n", field, errs.Get(field))
+//			}
+//		}
+//	}
+//
+// JSON Serialization:
+//
+//	var errs errsx.Map
+//	errs.Set("email", "invalid format")
+//	errs.Set("password", "too short")
+//	data, _ := json.Marshal(errs)
+//	// Output: {"email":"invalid format","password":"too short"}
+//
+// Parsing Error Strings:
+//
+//	errString := errs.Error() // "email: invalid format; password: too short"
+//	parsed := errsx.ParseErrors(errString)
+//	fmt.Println(parsed["email"]) // "invalid format"
+//
+// Lazy Initialization:
+//
+//	var errs errsx.Map  // nil map
+//	errs.Set("field", "error")  // automatically initializes the map
+//
+// Important Behavior Notes:
+//
+// Nil Map Handling:
+//   - A nil Map is safe to use with most methods
+//   - Set() automatically initializes a nil map
+//   - Get() returns empty string for nil maps
+//   - Has() returns false for nil maps
+//   - Fields() returns nil for nil maps
+//   - Error() returns "<nil>" for nil maps
+//
+// Panic Conditions:
+//   - Set() panics if msg is not a string or error type
+//   - As() panics if target pointer is nil
+//
+// Non-Deterministic Ordering:
+//   - Error() returns fields in random order (map iteration)
+//   - Fields() returns fields in sorted order (consistent)
+//
 // Thread Safety:
 //
 // This package is not thread-safe. If you need to use errsx.Map concurrently
