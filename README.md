@@ -67,6 +67,180 @@ func main() {
 }
 ```
 
+## Advanced Examples
+
+### Error Wrapping and Extraction
+
+You can wrap `errsx.Map` with other errors and extract it later using the `As` function:
+
+```go
+func validateUser(user User) error {
+    var errs errsx.Map
+
+    if user.Email == "" {
+        errs.Set("email", "email is required")
+    }
+    if len(user.Password) < 8 {
+        errs.Set("password", "password must be at least 8 characters")
+    }
+
+    return errs.AsError()
+}
+
+// In your handler
+if err := validateUser(user); err != nil {
+    var errMap errsx.Map
+    if errsx.As(err, &errMap) {
+        // You now have access to individual field errors
+        for _, field := range errMap.Fields() {
+            fmt.Printf("%s: %s\n", field, errMap.Get(field))
+        }
+    }
+}
+```
+
+### JSON Serialization
+
+`errsx.Map` implements `json.Marshaler` for easy API responses:
+
+```go
+var errs errsx.Map
+errs.Set("email", "invalid format")
+errs.Set("password", "too short")
+
+data, _ := json.Marshal(errs)
+// Output: {"email":"invalid format","password":"too short"}
+```
+
+### Lazy Initialization
+
+A nil `Map` is automatically initialized when you call `Set`:
+
+```go
+var errs errsx.Map  // nil map
+errs.Set("field", "error")  // automatically initialized
+fmt.Println(errs.Has("field"))  // true
+```
+
+### Iterating Over Errors
+
+Use the `Fields()` method for consistent iteration:
+
+```go
+for _, field := range errs.Fields() {
+    fmt.Printf("%s: %s\n", field, errs.Get(field))
+}
+```
+
+## Use Cases
+
+### When to Use errsx.Map
+
+`errsx.Map` is ideal for:
+- **Form validation** with multiple input fields
+- **Batch operations** where you want to collect all errors instead of stopping at the first one
+- **API responses** that need to return field-specific error messages
+- **Complex validation** where multiple fields may have errors simultaneously
+
+### When NOT to Use errsx.Map
+
+Consider simpler error handling approaches for:
+- **Sequential operations** that should stop on the first error
+- **Single error scenarios** where only one thing can go wrong
+- **Performance-critical code** where the map overhead is unacceptable
+
+## Behavior Notes
+
+### Non-Deterministic Ordering
+
+The `Error()` method returns errors in **non-deterministic order** due to Go's map iteration behavior. If you need consistent ordering for testing or display, use the `Fields()` method which returns a sorted slice:
+
+```go
+// Non-deterministic order
+errString := errs.Error()  // Could be "a: err1; b: err2" or "b: err2; a: err1"
+
+// Deterministic order
+for _, field := range errs.Fields() {  // Always sorted alphabetically
+    fmt.Println(field, errs.Get(field))
+}
+```
+
+### Nil Map Behavior
+
+Most methods work correctly on a nil `Map`:
+- `Get()` returns an empty string
+- `Has()` returns false
+- `Fields()` returns nil
+- `Len()` returns 0
+- `IsEmpty()` returns true
+- `Error()` returns "<nil>"
+- `Set()` **initializes** the map automatically
+
+### Pointer vs Value Receivers
+
+Methods are designed with intentional receiver types:
+- **Pointer receivers** (`Set`, `Has`, `Delete`, `Clear`): Can modify the map
+- **Value receivers** (`Get`, `Fields`, `Len`, `IsEmpty`, `Error`, `String`, `AsError`, `MarshalJSON`): Read-only operations
+
+## Panics
+
+Be aware of these panic conditions:
+
+### Set() Panics
+
+`Set()` will panic if you provide an unsupported type (anything other than `string` or `error`):
+
+```go
+var errs errsx.Map
+errs.Set("field", 123)  // PANIC: unsupported type int
+```
+
+### As() Panics
+
+`As()` will panic if the target pointer is nil:
+
+```go
+var errMap *errsx.Map = nil
+errsx.As(someError, errMap)  // PANIC: target cannot be nil
+```
+
+## Testing
+
+### Testing Functions that Return errsx.Map
+
+When testing functions that return `errsx.Map`, use the `As()` function to extract the map from error interfaces:
+
+```go
+func TestValidation(t *testing.T) {
+    err := validateUser(User{})
+
+    var errs errsx.Map
+    if !errsx.As(err, &errs) {
+        t.Fatal("expected errsx.Map")
+    }
+
+    if !errs.Has("email") {
+        t.Error("expected email error")
+    }
+
+    if errs.Get("password") != "password must be at least 8 characters" {
+        t.Error("unexpected password error message")
+    }
+}
+```
+
+### Checking Specific Fields
+
+Use `Fields()` for consistent test assertions:
+
+```go
+expected := []string{"email", "password"}
+actual := errs.Fields()
+if !reflect.DeepEqual(expected, actual) {
+    t.Errorf("expected %v, got %v", expected, actual)
+}
+```
+
 ## API
 
 ### Core Methods
@@ -100,10 +274,13 @@ Returns true if the map contains no errors.
 #### `AsError() error`
 Returns the map as an error interface if it contains errors, nil otherwise.
 
-### Parsing
+### Parsing and Extraction
 
 #### `ParseErrors(s string) map[string]string`
 Parses an error string (in the format produced by `Error()`) back into a map.
+
+#### `As(err error, target *Map) bool`
+Finds and extracts an `errsx.Map` from an error chain, similar to `errors.As()`. Returns true if a Map was found and assigns it to target. Traverses wrapped errors to find the Map. Panics if target is nil.
 
 ### Interface Implementation
 
